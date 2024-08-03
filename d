@@ -1,5 +1,5 @@
 -- Variables
-local ownerName = "Zack089232"-- Replace with the main account's username
+local ownerNames = {"Youexist221", "Zack089232"} -- List of owner account usernames
 local following = false
 local viewing = false
 local followTarget = nil
@@ -35,7 +35,14 @@ end
 -- Function to follow the owner
 local function followOwner()
     following = true
-    followTarget = game.Players:FindFirstChild(ownerName)
+    followTarget = nil
+    for _, ownerName in ipairs(ownerNames) do
+        followTarget = game.Players:FindFirstChild(ownerName)
+        if followTarget then
+            break
+        end
+    end
+
     while following and followTarget do
         if followTarget and followTarget.Character and followTarget.Character.PrimaryPart then
             local altPlayer = getAltPlayer()
@@ -113,7 +120,7 @@ end
 
 -- Function to unvanish the alt
 local function unvanishAlt()
-    teleportAltToPlayer(ownerName)
+    teleportAltToPlayer(ownerNames[1]) -- Default to the first owner if multiple
 end
 
 -- Function to reset the alt
@@ -134,16 +141,17 @@ end
 
 -- Function to find the owner player and check if they are knocked out
 local function findOwnerPlayer()
-    targetPlayer = game.Players:FindFirstChild(ownerName)
-    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") and 
-       targetPlayer.Character.BodyEffects:FindFirstChild("K.O") and targetPlayer.Character.BodyEffects["K.O"].Value == true then
-        print("Found knocked-out owner player:", ownerName)
-        return true
-    else
-        print("Owner player not found or not knocked out.")
-        targetPlayer = nil
-        return false
+    for _, ownerName in ipairs(ownerNames) do
+        targetPlayer = game.Players:FindFirstChild(ownerName)
+        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") and 
+           targetPlayer.Character.BodyEffects:FindFirstChild("K.O") and targetPlayer.Character.BodyEffects["K.O"].Value == true then
+            print("Found knocked-out owner player:", ownerName)
+            return true
+        end
     end
+    print("No owner player found or not knocked out.")
+    targetPlayer = nil
+    return false
 end
 
 -- Function to start grabbing the owner player
@@ -216,7 +224,7 @@ end
 
 -- Chat command listener
 local function onChatted(player, msg)
-    if player.Name == ownerName then
+    if table.find(ownerNames, player.Name) then
         local cmd, arg = msg:lower():match("^(%S+)%s*(.*)$")
 
         if cmd == ".tpalt" and arg then
@@ -238,28 +246,4 @@ local function onChatted(player, msg)
         elseif cmd == "reset!" then
             resetAlt()
         elseif cmd == "kick!" then
-            kickAlt()
-        elseif cmd == "grabme!" then
-            startGrabbing()
-            monitorOwnerHealth() -- Start monitoring owner's health when grabme! is called
-        end
-    end
-end
-
--- Setup listeners for existing and new players
-local function setupPlayer(player)
-    if player.Name == ownerName then
-        player.Chatted:Connect(function(msg)
-            onChatted(player, msg)
-        end)
-    end
-end
-
--- Monitor alt's health
-monitorAltHealth()
-
--- Connect listeners for current and future players
-for _, player in ipairs(game.Players:GetPlayers()) do
-    setupPlayer(player)
-end
-game.Players.PlayerAdded:Connect(setupPlayer)
+            kick
